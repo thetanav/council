@@ -21,7 +21,7 @@ export function LLMSelector({
 }: LLMSelectorProps) {
   const toggleLLM = (id: string) => {
     if (disabled) return;
-    
+
     if (selectedIds.includes(id)) {
       onSelectionChange(selectedIds.filter((i) => i !== id));
     } else {
@@ -37,6 +37,10 @@ export function LLMSelector({
         return "Anthropic";
       case "google":
         return "Google";
+      case "ollama":
+        return "Ollama";
+      case "openrouter":
+        return "Openrouter";
       default:
         return provider;
     }
@@ -46,15 +50,14 @@ export function LLMSelector({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {llms.map((llm) => {
         const isSelected = selectedIds.includes(llm.id);
-        
+
         return (
           <Card
             key={llm.id}
-            className={`cursor-pointer transition-all duration-200 ${
-              isSelected
-                ? "ring-2 ring-primary bg-primary/5"
-                : "hover:bg-muted/50"
-            } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`cursor-pointer transition-all duration-200 ${isSelected
+              ? "ring-2 ring-primary bg-primary/5"
+              : "hover:bg-muted/50"
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => toggleLLM(llm.id)}
           >
             <CardContent className="p-4">
@@ -64,14 +67,6 @@ export function LLMSelector({
                   disabled={disabled}
                   className="mt-1"
                 />
-                <Avatar className="h-10 w-10" style={{ backgroundColor: llm.color }}>
-                  <AvatarFallback
-                    className="text-white font-semibold text-sm"
-                    style={{ backgroundColor: llm.color }}
-                  >
-                    {llm.avatar}
-                  </AvatarFallback>
-                </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-sm">{llm.name}</h3>

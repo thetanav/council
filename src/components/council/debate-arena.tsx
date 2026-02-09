@@ -43,9 +43,9 @@ export function DebateArena({
 
   return (
     <ScrollArea className="h-[600px] pr-4" ref={scrollRef}>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {Object.entries(groupedByRound).map(([round, roundMessages]) => (
-          <div key={round} className="space-y-4">
+          <div key={round} className="space-y-3">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 Round {round}
@@ -63,7 +63,7 @@ export function DebateArena({
                     className="h-1"
                     style={{ backgroundColor: participant.color }}
                   />
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-start gap-3">
                       <Avatar
                         className="h-8 w-8 flex-shrink-0"
@@ -96,7 +96,7 @@ export function DebateArena({
 
         {/* Streaming message */}
         {currentSpeaker && streamingContent && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {currentRound && !groupedByRound[currentRound] && (
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
@@ -116,7 +116,7 @@ export function DebateArena({
                     className="h-1 animate-pulse"
                     style={{ backgroundColor: participant.color }}
                   />
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-start gap-3">
                       <Avatar
                         className="h-8 w-8 flex-shrink-0 ring-2 ring-primary/50 animate-pulse"

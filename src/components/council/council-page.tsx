@@ -93,9 +93,9 @@ export function CouncilPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4">
           {/* Left column - Setup & Participants */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Question input */}
             <Card>
               <CardHeader>
@@ -218,7 +218,7 @@ export function CouncilPage() {
           </div>
 
           {/* Center column - Debate Arena */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Status bar */}
             {status !== "idle" && (
               <Card>

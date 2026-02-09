@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { LLMProvider } from "@/types/council";
+import { ollama } from 'ollama-ai-provider-v2';
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,6 +24,8 @@ export function getModel(provider: LLMProvider, modelId: string) {
       return anthropic(modelId);
     case "google":
       return google(modelId);
+    case "ollama":
+      return ollama(modelId)
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }

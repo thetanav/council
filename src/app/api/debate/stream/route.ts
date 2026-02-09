@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { smoothStream, streamText } from "ai";
 import { NextRequest } from "next/server";
 import { getModel } from "@/lib/ai-providers";
 import { getLLMsByIds } from "@/lib/llm-config";
@@ -87,6 +87,7 @@ Please respond to the discussion, addressing points made by others and refining 
     system: systemPrompt,
     prompt: userPrompt,
     maxOutputTokens: 500,
+    experimental_transform: smoothStream(),
   });
 
   for await (const chunk of textStream) {
