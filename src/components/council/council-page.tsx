@@ -6,6 +6,7 @@ import { LLMSelector } from "@/components/council/llm-selector";
 import { DebateArena } from "@/components/council/debate-arena";
 import { VotingPanel } from "@/components/council/voting-panel";
 import { ParticipantList } from "@/components/council/participant-list";
+import { Conclusion } from "@/components/council/conclusion";
 import { useDebateStream } from "@/hooks/use-debate-stream";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,14 +78,14 @@ export function CouncilPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Gavel className="h-6 w-6 text-primary" />
+            <div className="p-1.5 rounded-md bg-primary/10">
+              <Gavel className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Council of LLMs</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl font-bold">Council of LLMs</h1>
+              <p className="text-xs text-muted-foreground">
                 Let AI models debate, deliberate, and vote on your questions
               </p>
             </div>
@@ -92,32 +93,32 @@ export function CouncilPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-4">
+      <main className="container mx-auto px-4 py-6">
+        <div className="grid lg:grid-cols-3 gap-3">
           {/* Left column - Setup & Participants */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Question input */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
                   Your Question
                 </CardTitle>
                 <CardDescription>
                   What would you like the council to debate?
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <Textarea
                   placeholder="e.g., What is the best programming language for beginners in 2025?"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   disabled={isDebating}
-                  className="min-h-[100px] resize-none"
+                  className="min-h-[84px] resize-none text-sm"
                 />
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-sm font-medium mb-2 block">
+                    <label className="text-xs font-medium mb-1.5 block">
                       Debate Rounds
                     </label>
                     <Select
@@ -125,7 +126,7 @@ export function CouncilPage() {
                       onValueChange={setMaxRounds}
                       disabled={isDebating}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -144,10 +145,10 @@ export function CouncilPage() {
             {/* LLM Selection */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" />
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
                   Select Council Members
-                  <Badge variant="secondary" className="ml-auto">
+                  <Badge variant="secondary" className="ml-auto text-xs">
                     {selectedLLMs.length} selected
                   </Badge>
                 </CardTitle>
@@ -166,12 +167,12 @@ export function CouncilPage() {
             </Card>
 
             {/* Action buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 onClick={handleStartDebate}
                 disabled={!canStart}
                 className="flex-1"
-                size="lg"
+                size="default"
               >
                 {isDebating ? (
                   <>
@@ -189,7 +190,7 @@ export function CouncilPage() {
                 <Button
                   onClick={handleReset}
                   variant="outline"
-                  size="lg"
+                  size="default"
                   disabled={isDebating}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
@@ -201,8 +202,8 @@ export function CouncilPage() {
             {/* Error display */}
             {error && (
               <Card className="border-destructive">
-                <CardContent className="pt-6">
-                  <p className="text-sm text-destructive">{error}</p>
+                <CardContent className="pt-4">
+                  <p className="text-xs text-destructive">{error}</p>
                 </CardContent>
               </Card>
             )}
@@ -218,13 +219,13 @@ export function CouncilPage() {
           </div>
 
           {/* Center column - Debate Arena */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             {/* Status bar */}
             {status !== "idle" && (
               <Card>
-                <CardContent className="py-4">
+                <CardContent className="py-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <Badge
                         variant={
                           status === "concluded"
@@ -239,12 +240,12 @@ export function CouncilPage() {
                         {status === "concluded" && "Debate Concluded"}
                         {status === "error" && "Error"}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {messages.length} messages
                       </span>
                     </div>
                     {consensus !== undefined && (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="text-xs">
                         Consensus: {consensus.toFixed(0)}%
                       </Badge>
                     )}
@@ -256,19 +257,17 @@ export function CouncilPage() {
             {/* Question display */}
             {status !== "idle" && question && (
               <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="py-4">
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Debating:
-                  </p>
-                  <p className="font-medium">&ldquo;{question}&rdquo;</p>
+                <CardContent className="py-3">
+                  <p className="text-xs text-muted-foreground mb-1">Debating:</p>
+                  <p className="font-medium text-sm">"{question}"</p>
                 </CardContent>
               </Card>
             )}
 
             {/* Debate Arena */}
-            <Card className="min-h-[600px]">
+            <Card className="min-h-[520px]">
               <CardHeader>
-                <CardTitle className="text-lg">Debate Arena</CardTitle>
+                <CardTitle className="text-base">Debate Arena</CardTitle>
               </CardHeader>
               <CardContent>
                 <DebateArena
@@ -283,14 +282,29 @@ export function CouncilPage() {
 
             <Separator />
 
-            {/* Voting Panel */}
-            <VotingPanel
-              votes={votes}
-              participants={participants}
-              consensus={consensus}
-              isVoting={status === "voting"}
-              currentVoter={currentVoter}
-            />
+            {/* Voting Panel - show during voting and after */}
+            {(votes.length > 0 || status === "voting") && (
+              <VotingPanel
+                votes={votes}
+                participants={participants}
+                consensus={consensus}
+                isVoting={status === "voting"}
+                currentVoter={currentVoter}
+              />
+            )}
+
+            {/* Conclusion - show only when concluded */}
+            {status === "concluded" && consensus !== undefined && (
+              <>
+                <Separator />
+                <Conclusion
+                  question={question}
+                  votes={votes}
+                  participants={participants}
+                  consensus={consensus}
+                />
+              </>
+            )}
           </div>
         </div>
       </main>

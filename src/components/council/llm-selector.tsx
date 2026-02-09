@@ -47,7 +47,7 @@ export function LLMSelector({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
       {llms.map((llm) => {
         const isSelected = selectedIds.includes(llm.id);
 
@@ -60,24 +60,15 @@ export function LLMSelector({
               } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => toggleLLM(llm.id)}
           >
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
+            <CardContent>
+              <div className="flex items-start gap-2.5">
                 <Checkbox
                   checked={isSelected}
                   disabled={disabled}
-                  className="mt-1"
+                  className="mt-0.5"
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-sm">{llm.name}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {getProviderLabel(llm.provider)}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {llm.personality.slice(0, 80)}...
-                  </p>
-                </div>
+                <h3 className="font-semibold text-xs">{llm.name}</h3>
+
               </div>
             </CardContent>
           </Card>

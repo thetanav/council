@@ -23,17 +23,17 @@ export function ParticipantList({
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Users className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Users className="h-4 w-4" />
           Council Members
-          <Badge variant="secondary" className="ml-auto">
+          <Badge variant="secondary" className="ml-auto text-xs">
             {participants.length}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {participants.map((participant) => {
             const isSpeaking = currentSpeaker === participant.id;
             const isVoting = currentVoter === participant.id;
@@ -41,7 +41,7 @@ export function ParticipantList({
             return (
               <div
                 key={participant.id}
-                className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                className={`flex items-center gap-2.5 p-2 rounded-md transition-colors ${
                   isSpeaking
                     ? "bg-primary/10 ring-1 ring-primary"
                     : isVoting
@@ -50,11 +50,11 @@ export function ParticipantList({
                 }`}
               >
                 <Avatar
-                  className={`h-8 w-8 ${isSpeaking || isVoting ? "animate-pulse" : ""}`}
+                  className={`h-7 w-7 ${isSpeaking || isVoting ? "animate-pulse" : ""}`}
                   style={{ backgroundColor: participant.color }}
                 >
                   <AvatarFallback
-                    className="text-white text-xs font-semibold"
+                    className="text-white text-[11px] font-semibold"
                     style={{ backgroundColor: participant.color }}
                   >
                     {participant.avatar}
@@ -62,18 +62,18 @@ export function ParticipantList({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm truncate">
+                    <span className="font-medium text-xs truncate">
                       {participant.name}
                     </span>
                     {isSpeaking && (
-                      <Badge variant="default" className="text-xs animate-pulse">
+                      <Badge variant="default" className="text-[11px] animate-pulse">
                         Speaking
                       </Badge>
                     )}
                     {isVoting && (
                       <Badge
                         variant="outline"
-                        className="text-xs animate-pulse border-yellow-500 text-yellow-600"
+                        className="text-[11px] animate-pulse border-yellow-500 text-yellow-600"
                       >
                         Voting
                       </Badge>
