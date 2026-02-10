@@ -1,6 +1,6 @@
 "use client";
 
-import { LLMParticipant } from "@/types/council";
+import { LLMParticipant, Vote } from "@/types/council";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +8,14 @@ import { Users } from "lucide-react";
 
 interface ParticipantListProps {
   participants: LLMParticipant[];
+  votes?: Vote[];
   currentSpeaker?: string;
   currentVoter?: string;
 }
 
 export function ParticipantList({
   participants,
+  votes,
   currentSpeaker,
   currentVoter,
 }: ParticipantListProps) {
@@ -37,6 +39,7 @@ export function ParticipantList({
           {participants.map((participant) => {
             const isSpeaking = currentSpeaker === participant.id;
             const isVoting = currentVoter === participant.id;
+            const vote = votes?.find((item) => item.participantId === participant.id);
 
             return (
               <div
@@ -65,6 +68,11 @@ export function ParticipantList({
                     <span className="font-medium text-xs truncate">
                       {participant.name}
                     </span>
+                    {vote && (
+                      <Badge variant="outline" className="text-[11px]">
+                        Score {vote.confidence}%
+                      </Badge>
+                    )}
                     {isSpeaking && (
                       <Badge variant="default" className="text-[11px] animate-pulse">
                         Speaking

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type React from "react";
 import { useEffect, useRef } from "react";
 
 interface DebateArenaProps {
@@ -41,6 +42,14 @@ export function DebateArena({
     acc[msg.round].push(msg);
     return acc;
   }, {} as Record<number, DebateMessage[]>);
+
+  const handleCollapsed = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const target = event.currentTarget.nextElementSibling as HTMLElement | null;
+    if (!target) return;
+    const isCollapsed = target.getAttribute("data-collapsed") === "true";
+    target.setAttribute("data-collapsed", String(!isCollapsed));
+    target.classList.toggle("line-clamp-3", !isCollapsed);
+  };
 
   return (
     <ScrollArea className="h-[520px] pr-3" ref={scrollRef}>
@@ -84,7 +93,16 @@ export function DebateArena({
                           </span>
                         </div>
                         <div className="text-xs text-foreground/90 prose prose-xs dark:prose-invert max-w-none [&_p]:mb-1.5 [&_p:last-child]:mb-0">
-                          <Streamdown>{message.content}</Streamdown>
+                          <button
+                            type="button"
+                            onClick={handleCollapsed}
+                            className="text-[11px] text-muted-foreground mb-1"
+                          >
+                            Toggle response
+                          </button>
+                          <div data-collapsed="true" className="line-clamp-3">
+                            <Streamdown>{message.content}</Streamdown>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -140,7 +158,16 @@ export function DebateArena({
                           </Badge>
                         </div>
                         <div className="text-xs text-foreground/90 prose prose-xs dark:prose-invert max-w-none [&_p]:mb-1.5 [&_p:last-child]:mb-0">
-                          <Streamdown>{streamingContent}</Streamdown>
+                          <button
+                            type="button"
+                            onClick={handleCollapsed}
+                            className="text-[11px] text-muted-foreground mb-1"
+                          >
+                            Toggle response
+                          </button>
+                          <div data-collapsed="true" className="line-clamp-3">
+                            <Streamdown>{streamingContent}</Streamdown>
+                          </div>
                           <span className="inline-block w-2 h-4 bg-primary/50 animate-pulse ml-0.5 align-middle" />
                         </div>
                       </div>

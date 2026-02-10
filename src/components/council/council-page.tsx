@@ -212,6 +212,7 @@ export function CouncilPage() {
             {participants.length > 0 && (
               <ParticipantList
                 participants={participants}
+                votes={votes}
                 currentSpeaker={currentSpeaker}
                 currentVoter={currentVoter}
               />

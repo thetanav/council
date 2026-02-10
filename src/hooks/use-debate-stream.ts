@@ -83,6 +83,7 @@ export function useDebateStream(): UseDebateStreamReturn {
 
       case "speaking":
         setCurrentSpeaker(data.participantId as string);
+        setCurrentVoter(undefined);
         setStreamingContent("");
         break;
 
@@ -111,10 +112,12 @@ export function useDebateStream(): UseDebateStreamReturn {
 
       case "voting-start":
         setStatus("voting");
+        setCurrentSpeaker(undefined);
         break;
 
       case "voting":
         setCurrentVoter(data.participantId as string);
+        setCurrentSpeaker(undefined);
         break;
 
       case "vote":

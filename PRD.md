@@ -1,0 +1,3 @@
+- the conclusion should be good enough with action
+- collapased model response/speaking
+- the member list should show there voting score in next to there name

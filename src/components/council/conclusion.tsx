@@ -35,19 +35,34 @@ export function Conclusion({ question, votes, participants, consensus }: Conclus
 
   const consensusInfo = getConsensusLabel(consensus);
 
-  // Find the most common position
   const positionCounts = votes.reduce((acc, vote) => {
     const key = vote.position.toLowerCase();
-    acc[key] = (acc[key] || 0) + 1;
+    if (!acc[key]) {
+      acc[key] = { count: 0, sample: vote.position };
+    }
+    acc[key].count += 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, { count: number; sample: string }>);
 
   const majorityPosition = Object.entries(positionCounts)
-    .sort((a, b) => b[1] - a[1])[0];
+    .sort((a, b) => b[1].count - a[1].count)[0];
 
-  const majorityText = majorityPosition 
-    ? `${majorityPosition[1]} of ${votes.length} models agree` 
+  const majorityText = majorityPosition
+    ? `${majorityPosition[1].count} of ${votes.length} models agree`
     : "No clear majority";
+
+  const majorityPositionText =
+    majorityPosition?.[1].sample ?? "the question remains open";
+  const actionSteps = [
+    "Identify the highest-impact constraint and validate it with a small test.",
+    "Run a quick comparison on the top two options against the success criteria.",
+    "Make a time-boxed decision and document assumptions for a follow-up review.",
+  ];
+
+  const recommendedAction = votes.length
+    ? votes.reduce((best, vote) => (vote.confidence > best.confidence ? vote : best), votes[0])
+        .position
+    : "Define the next best action.";
 
   return (
     <Card className="border-primary">
@@ -96,9 +111,27 @@ export function Conclusion({ question, votes, participants, consensus }: Conclus
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm">
-            Based on the collective votes, the council has reached the conclusion
-            that {votes.length > 0 && votes[0].position.toLowerCase()}.
+            The council leans toward {majorityPositionText}.
           </p>
+        </div>
+
+        {/* Recommended Action */}
+        <div className="p-3 bg-muted/50 rounded-md border">
+          <div className="flex items-center gap-2 mb-1.5">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="font-semibold text-sm">Recommended Action</span>
+            <Badge variant="secondary" className="ml-auto text-[11px]">
+              Highest confidence
+            </Badge>
+          </div>
+          <p className="text-sm text-foreground">{recommendedAction}</p>
+          <div className="mt-2 space-y-1">
+            {actionSteps.map((step) => (
+              <p key={step} className="text-xs text-muted-foreground">
+                {step}
+              </p>
+            ))}
+          </div>
         </div>
 
         {/* Individual Votes */}
