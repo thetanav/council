@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, TrendingUp } from "lucide-react";
+import { CheckCircle2, TrendingUp, Users } from "lucide-react";
 
 interface VotingPanelProps {
   votes: Vote[];
@@ -27,9 +27,9 @@ export function VotingPanel({
     return participants.find((p) => p.id === id);
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 80) return "text-green-600";
-    if (confidence >= 60) return "text-yellow-600";
+  const getScoreColor = (score: number) => {
+    if (score >= 8) return "text-green-600";
+    if (score >= 5) return "text-yellow-600";
     return "text-orange-600";
   };
 
@@ -48,8 +48,8 @@ export function VotingPanel({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4" />
-          Council Votes
+          <Users className="h-4 w-4" />
+          Peer Voting
           {isVoting && (
             <Badge variant="secondary" className="animate-pulse ml-2 text-[11px]">
               Voting in progress...
@@ -64,7 +64,7 @@ export function VotingPanel({
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1">
                 <TrendingUp className="h-3.5 w-3.5" />
-                Consensus Level
+                Debate Quality
               </span>
               <Badge className={`${getConsensusLabel(consensus).color} text-[11px]`}>
                 {getConsensusLabel(consensus).label}
@@ -77,18 +77,19 @@ export function VotingPanel({
               />
             </div>
             <p className="text-[11px] text-muted-foreground text-center">
-              Average confidence: {consensus.toFixed(0)}%
+              Average score: {(consensus / 10).toFixed(1)}/10
             </p>
           </div>
         )}
 
         {votes.length > 0 && <Separator />}
 
-        {/* Individual votes */}
+        {/* Individual peer votes */}
         <div className="space-y-2">
           {votes.map((vote) => {
-            const participant = getParticipant(vote.participantId);
-            if (!participant) return null;
+            const voter = getParticipant(vote.participantId);
+            const votedFor = getParticipant(vote.votedForId);
+            if (!voter || !votedFor) return null;
 
             return (
               <div
@@ -99,26 +100,41 @@ export function VotingPanel({
                   <div className="flex items-center gap-2">
                     <Avatar
                       className="h-6 w-6"
-                      style={{ backgroundColor: participant.color }}
+                      style={{ backgroundColor: voter.color }}
                     >
                       <AvatarFallback
                         className="text-white text-[10px]"
-                        style={{ backgroundColor: participant.color }}
+                        style={{ backgroundColor: voter.color }}
                       >
-                        {participant.avatar}
+                        {voter.avatar}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="font-medium text-xs">{participant.name}</span>
+                    <span className="font-medium text-xs">{voter.name}</span>
+                    <span className="text-[10px] text-muted-foreground">→</span>
+                    <Avatar
+                      className="h-5 w-5"
+                      style={{ backgroundColor: votedFor.color }}
+                    >
+                      <AvatarFallback
+                        className="text-white text-[9px]"
+                        style={{ backgroundColor: votedFor.color }}
+                      >
+                        {votedFor.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-xs">{votedFor.name}</span>
                   </div>
                   <Badge
                     variant="outline"
-                    className={`${getConfidenceColor(vote.confidence)} text-[11px]`}
+                    className={`${getScoreColor(vote.score)} text-[11px]`}
                   >
-                    {vote.confidence}% confident
+                    Score: {vote.score}/10
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-medium">{vote.position}</p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Position:</span> {vote.position}
+                  </p>
                   <div className="text-[11px] text-muted-foreground prose prose-xs dark:prose-invert max-w-none [&_p]:mb-1 [&_p:last-child]:mb-0">
                     <Streamdown>{vote.reasoning}</Streamdown>
                   </div>
@@ -157,7 +173,7 @@ export function VotingPanel({
                     </span>
                     {currentVoter === participant.id && (
                       <Badge variant="secondary" className="text-[11px] animate-pulse">
-                        Deliberating...
+                        Evaluating peers...
                       </Badge>
                     )}
                   </div>

@@ -130,6 +130,10 @@ export function useDebateStream(): UseDebateStreamReturn {
         setStatus("concluded");
         break;
 
+      case "heartbeat":
+        // Heartbeat received, connection is alive
+        break;
+
       case "error":
         setError(data.message as string);
         setStatus("error");

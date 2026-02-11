@@ -2,14 +2,14 @@ import { LLMParticipant } from "@/types/council";
 
 export const AVAILABLE_LLMS: LLMParticipant[] = [
   {
-    id: "gemma3",
-    name: "gemma3",
-    model: "gemma3:1b",
-    provider: "ollama",
-    avatar: "G",
+    id: "gpt5",
+    name: "gpt5",
+    model: "gpt-5-2025-08-07",
+    provider: "openai",
+    avatar: "O",
     color: "#4285f4",
     personality:
-      "You bring a fresh perspective and often think outside the box. You're good at making connections between different domains and offering creative solutions.",
+      "",
   },
   {
     id: "qwen3",
@@ -19,7 +19,27 @@ export const AVAILABLE_LLMS: LLMParticipant[] = [
     avatar: "Q",
     color: "#34a853",
     personality:
-      "You are High iq and adaptable. You quickly assess situations and provide practical insights. You're good at finding common ground in debates.",
+      "",
+  },
+  {
+    id: "gemini",
+    name: "gemini",
+    model: "gemini-flash-latest",
+    provider: "google",
+    avatar: "G",
+    color: "#234d2eh",
+    personality:
+      "",
+  },
+  {
+    id: "glm-4.6",
+    name: "glm-4.6",
+    model: "glm-4.6:cloud",
+    provider: "ollama",
+    avatar: "G",
+    color: "#ad7f2b",
+    personality:
+      "",
   },
 ];
 

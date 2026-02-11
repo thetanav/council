@@ -20,9 +20,10 @@ export interface DebateMessage {
 
 export interface Vote {
   participantId: string;
+  votedForId: string;
   position: string;
   reasoning: string;
-  confidence: number;
+  score: number;
 }
 
 export interface DebateState {

@@ -70,7 +70,7 @@ export function ParticipantList({
                     </span>
                     {vote && (
                       <Badge variant="outline" className="text-[11px]">
-                        Score {vote.confidence}%
+                        Voted
                       </Badge>
                     )}
                     {isSpeaking && (

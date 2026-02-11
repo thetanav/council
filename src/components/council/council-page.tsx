@@ -27,6 +27,10 @@ import {
   Loader2,
   Gavel,
   Sparkles,
+  AlertCircle,
+  Activity,
+  Users,
+  Clock,
 } from "lucide-react";
 
 export function CouncilPage() {
@@ -201,9 +205,18 @@ export function CouncilPage() {
 
             {/* Error display */}
             {error && (
-              <Card className="border-destructive">
+              <Card className="border-destructive bg-destructive/5">
                 <CardContent className="pt-4">
-                  <p className="text-xs text-destructive">{error}</p>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-destructive">Error</p>
+                      <p className="text-xs text-destructive/80 mt-0.5">{error}</p>
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Click Reset to try again
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -223,7 +236,7 @@ export function CouncilPage() {
           <div className="lg:col-span-2 space-y-3">
             {/* Status bar */}
             {status !== "idle" && (
-              <Card>
+              <Card className={status === "error" ? "border-destructive" : ""}>
                 <CardContent className="py-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -235,18 +248,55 @@ export function CouncilPage() {
                             ? "destructive"
                             : "secondary"
                         }
+                        className={isDebating ? "animate-pulse" : ""}
                       >
-                        {status === "debating" && `Round ${currentRound}`}
-                        {status === "voting" && "Voting Phase"}
-                        {status === "concluded" && "Debate Concluded"}
-                        {status === "error" && "Error"}
+                        {status === "debating" && (
+                          <>
+                            <Activity className="h-3 w-3 mr-1" />
+                            Round {currentRound}
+                          </>
+                        )}
+                        {status === "voting" && (
+                          <>
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Voting Phase
+                          </>
+                        )}
+                        {status === "concluded" && (
+                          <>
+                            <Clock className="h-3 w-3 mr-1" />
+                            Debate Concluded
+                          </>
+                        )}
+                        {status === "error" && (
+                          <>
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Error
+                          </>
+                        )}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {messages.length} messages
-                      </span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Users className="h-3.5 w-3.5" />
+                        <span>{messages.length} messages</span>
+                        {votes.length > 0 && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span>{votes.length} votes</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     {consensus !== undefined && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          consensus >= 70 
+                            ? "border-green-500 text-green-600" 
+                            : consensus >= 40 
+                            ? "border-yellow-500 text-yellow-600" 
+                            : "border-orange-500 text-orange-600"
+                        }`}
+                      >
                         Consensus: {consensus.toFixed(0)}%
                       </Badge>
                     )}
@@ -257,18 +307,34 @@ export function CouncilPage() {
 
             {/* Question display */}
             {status !== "idle" && question && (
-              <Card className="bg-primary/5 border-primary/20">
+              <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-primary/20">
                 <CardContent className="py-3">
-                  <p className="text-xs text-muted-foreground mb-1">Debating:</p>
-                  <p className="font-medium text-sm">"{question}"</p>
+                  <div className="flex items-start gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Debating:</p>
+                      <p className="font-medium text-sm">&ldquo;{question}&rdquo;</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
 
             {/* Debate Arena */}
-            <Card className="min-h-[520px]">
-              <CardHeader>
-                <CardTitle className="text-base">Debate Arena</CardTitle>
+            <Card className="min-h-[520px] border-t-4 border-t-primary">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    Debate Arena
+                  </CardTitle>
+                  {isDebating && (
+                    <Badge variant="outline" className="text-[11px] animate-pulse">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse" />
+                      Live
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <DebateArena
