@@ -1,13 +1,19 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { DebateMessage, Vote, LLMParticipant } from "@/types/council";
+import { DebateMessage, Vote, LLMParticipant, CrossExaminationQuestion, SentimentData, SentimentType } from "@/types/council";
 
 interface StreamParticipant {
   id: string;
   name: string;
   avatar: string;
   color: string;
+}
+
+interface SentimentEvent {
+  participantId: string;
+  messageId: string;
+  sentiment: Record<SentimentType, number>;
 }
 
 interface UseDebateStreamReturn {
@@ -18,14 +24,27 @@ interface UseDebateStreamReturn {
   currentVoter: string | undefined;
   streamingContent: string | undefined;
   currentRound: number;
-  status: "idle" | "debating" | "voting" | "concluded" | "error";
+  status: "idle" | "debating" | "cross-examination" | "voting" | "concluded" | "error";
   consensus: number | undefined;
   error: string | undefined;
+  crossExamQuestions: CrossExaminationQuestion[];
+  currentCrossExamQuestion: CrossExaminationQuestion | undefined;
+  streamingCrossExamAnswer: string | undefined;
+  sentiments: Map<string, SentimentData>;
+  devilsAdvocateId: string | undefined;
+  enableWebSearch: boolean;
+  enableCrossExamination: boolean;
+  enableDevilsAdvocate: boolean;
   startDebate: (
     question: string,
     participantIds: string[],
     maxRounds: number,
-    allParticipants: LLMParticipant[]
+    allParticipants: LLMParticipant[],
+    options?: {
+      enableDevilsAdvocate?: boolean;
+      enableCrossExamination?: boolean;
+      enableWebSearch?: boolean;
+    }
   ) => Promise<void>;
   reset: () => void;
 }
@@ -39,10 +58,18 @@ export function useDebateStream(): UseDebateStreamReturn {
   const [streamingContent, setStreamingContent] = useState<string | undefined>();
   const [currentRound, setCurrentRound] = useState(1);
   const [status, setStatus] = useState<
-    "idle" | "debating" | "voting" | "concluded" | "error"
+    "idle" | "debating" | "cross-examination" | "voting" | "concluded" | "error"
   >("idle");
   const [consensus, setConsensus] = useState<number | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [crossExamQuestions, setCrossExamQuestions] = useState<CrossExaminationQuestion[]>([]);
+  const [currentCrossExamQuestion, setCurrentCrossExamQuestion] = useState<CrossExaminationQuestion | undefined>();
+  const [streamingCrossExamAnswer, setStreamingCrossExamAnswer] = useState<string | undefined>();
+  const [sentiments, setSentiments] = useState<Map<string, SentimentData>>(new Map());
+  const [devilsAdvocateId, setDevilsAdvocateId] = useState<string | undefined>();
+  const [enableWebSearch, setEnableWebSearch] = useState(false);
+  const [enableCrossExamination, setEnableCrossExamination] = useState(false);
+  const [enableDevilsAdvocate, setEnableDevilsAdvocate] = useState(false);
   
   const allParticipantsRef = useRef<LLMParticipant[]>([]);
 
@@ -57,6 +84,14 @@ export function useDebateStream(): UseDebateStreamReturn {
     setStatus("idle");
     setConsensus(undefined);
     setError(undefined);
+    setCrossExamQuestions([]);
+    setCurrentCrossExamQuestion(undefined);
+    setStreamingCrossExamAnswer(undefined);
+    setSentiments(new Map());
+    setDevilsAdvocateId(undefined);
+    setEnableWebSearch(false);
+    setEnableCrossExamination(false);
+    setEnableDevilsAdvocate(false);
   }, []);
 
   const handleEvent = useCallback((eventType: string, data: Record<string, unknown>) => {
@@ -75,20 +110,41 @@ export function useDebateStream(): UseDebateStreamReturn {
             });
           })
         );
+        setEnableWebSearch(!!data.enableWebSearch);
+        setEnableCrossExamination(!!data.enableCrossExamination);
+        setEnableDevilsAdvocate(!!data.enableDevilsAdvocate);
         break;
 
       case "round-start":
         setCurrentRound(data.round as number);
         break;
 
+      case "devils-advocate":
+        setDevilsAdvocateId(data.participantId as string);
+        break;
+
       case "speaking":
         setCurrentSpeaker(data.participantId as string);
         setCurrentVoter(undefined);
         setStreamingContent("");
+        setCurrentCrossExamQuestion(undefined);
+        setStreamingCrossExamAnswer(undefined);
         break;
 
       case "chunk":
         setStreamingContent(data.fullText as string);
+        break;
+
+      case "sentiment":
+        const sentimentData = data as unknown as SentimentEvent;
+        setSentiments(prev => {
+          const newMap = new Map(prev);
+          newMap.set(sentimentData.participantId, {
+            participantId: sentimentData.participantId,
+            sentiments: sentimentData.sentiment
+          });
+          return newMap;
+        });
         break;
 
       case "message-complete":
@@ -107,7 +163,61 @@ export function useDebateStream(): UseDebateStreamReturn {
         break;
 
       case "round-end":
-        // Round completed
+        break;
+
+      case "cross-exam-start":
+        setStatus("cross-examination");
+        setCurrentSpeaker(undefined);
+        break;
+
+      case "cross-exam-question":
+        setCurrentCrossExamQuestion({
+          id: data.questionId as string,
+          askerId: data.askerId as string,
+          targetId: data.targetId as string,
+          question: "",
+          answer: "",
+          round: 1
+        });
+        break;
+
+      case "cross-exam-question-stream":
+        setCurrentCrossExamQuestion(prev => prev ? {
+          ...prev,
+          question: data.chunk as string
+        } : undefined);
+        break;
+
+      case "cross-exam-question-complete":
+        setCurrentCrossExamQuestion(prev => prev ? {
+          ...prev,
+          question: data.question as string
+        } : undefined);
+        break;
+
+      case "cross-exam-answer":
+        setCurrentSpeaker(data.targetId as string);
+        setStreamingCrossExamAnswer("");
+        break;
+
+      case "cross-exam-answer-stream":
+        setStreamingCrossExamAnswer(data.chunk as string);
+        break;
+
+      case "cross-exam-answer-complete":
+        if (currentCrossExamQuestion) {
+          const updated: CrossExaminationQuestion = {
+            ...currentCrossExamQuestion,
+            answer: data.answer as string,
+          };
+          setCrossExamQuestions(prev => [...prev, updated]);
+        }
+        setCurrentSpeaker(undefined);
+        setStreamingCrossExamAnswer(undefined);
+        setCurrentCrossExamQuestion(undefined);
+        break;
+
+      case "cross-exam-end":
         break;
 
       case "voting-start":
@@ -131,7 +241,6 @@ export function useDebateStream(): UseDebateStreamReturn {
         break;
 
       case "heartbeat":
-        // Heartbeat received, connection is alive
         break;
 
       case "error":
@@ -139,14 +248,19 @@ export function useDebateStream(): UseDebateStreamReturn {
         setStatus("error");
         break;
     }
-  }, []);
+  }, [currentCrossExamQuestion]);
 
   const startDebate = useCallback(
     async (
       question: string,
       participantIds: string[],
       maxRounds: number,
-      allParticipants: LLMParticipant[]
+      allParticipants: LLMParticipant[],
+      options?: {
+        enableDevilsAdvocate?: boolean;
+        enableCrossExamination?: boolean;
+        enableWebSearch?: boolean;
+      }
     ) => {
       reset();
       setStatus("debating");
@@ -160,6 +274,9 @@ export function useDebateStream(): UseDebateStreamReturn {
             question,
             participantIds,
             maxRounds,
+            enableDevilsAdvocate: options?.enableDevilsAdvocate,
+            enableCrossExamination: options?.enableCrossExamination,
+            enableWebSearch: options?.enableWebSearch,
           }),
         });
 
@@ -181,7 +298,6 @@ export function useDebateStream(): UseDebateStreamReturn {
 
           buffer += decoder.decode(value, { stream: true });
           
-          // Process complete SSE messages
           const messages = buffer.split("\n\n");
           buffer = messages.pop() || "";
 
@@ -205,7 +321,6 @@ export function useDebateStream(): UseDebateStreamReturn {
                 const data = JSON.parse(dataStr);
                 handleEvent(eventType, data);
               } catch {
-                // Ignore parse errors
               }
             }
           }
@@ -229,6 +344,14 @@ export function useDebateStream(): UseDebateStreamReturn {
     status,
     consensus,
     error,
+    crossExamQuestions,
+    currentCrossExamQuestion,
+    streamingCrossExamAnswer,
+    sentiments,
+    devilsAdvocateId,
+    enableWebSearch,
+    enableCrossExamination,
+    enableDevilsAdvocate,
     startDebate,
     reset,
   };

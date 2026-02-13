@@ -7,10 +7,14 @@ import { DebateArena } from "@/components/council/debate-arena";
 import { VotingPanel } from "@/components/council/voting-panel";
 import { ParticipantList } from "@/components/council/participant-list";
 import { Conclusion } from "@/components/council/conclusion";
+import { SentimentRadar } from "@/components/council/sentiment-radar";
+import { CrossExaminationPanel } from "@/components/council/cross-examination-panel";
+import { TrendingTopics } from "@/components/council/trending-topics";
 import { useDebateStream } from "@/hooks/use-debate-stream";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -31,12 +35,19 @@ import {
   Activity,
   Users,
   Clock,
+  Search,
+  HelpCircle,
+  ArrowRightLeft,
+  Zap,
 } from "lucide-react";
 
 export function CouncilPage() {
   const [question, setQuestion] = useState("");
   const [selectedLLMs, setSelectedLLMs] = useState<string[]>([]);
   const [maxRounds, setMaxRounds] = useState("3");
+  const [enableWebSearch, setEnableWebSearch] = useState(false);
+  const [enableCrossExamination, setEnableCrossExamination] = useState(true);
+  const [enableDevilsAdvocate, setEnableDevilsAdvocate] = useState(false);
 
   const {
     messages,
@@ -49,6 +60,13 @@ export function CouncilPage() {
     status,
     consensus,
     error,
+    crossExamQuestions,
+    currentCrossExamQuestion,
+    streamingCrossExamAnswer,
+    sentiments,
+    devilsAdvocateId,
+    enableWebSearch: isWebSearchEnabled,
+    enableCrossExamination: isCrossExamEnabled,
     startDebate,
     reset,
   } = useDebateStream();
@@ -64,7 +82,12 @@ export function CouncilPage() {
       question,
       selectedLLMs,
       parseInt(maxRounds),
-      selectedParticipants
+      selectedParticipants,
+      {
+        enableDevilsAdvocate,
+        enableCrossExamination,
+        enableWebSearch,
+      }
     );
   };
 
@@ -74,41 +97,48 @@ export function CouncilPage() {
     setSelectedLLMs([]);
   };
 
-  const isDebating = status === "debating" || status === "voting";
+  const handleTopicSelect = (topic: string) => {
+    setQuestion(topic);
+  };
+
+  const isDebating = status === "debating" || status === "cross-examination" || status === "voting";
   const canStart =
     question.trim().length > 0 && selectedLLMs.length >= 2 && !isDebating;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-md bg-primary/10">
-              <Gavel className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-4">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/25">
+              <Gavel className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">Council of LLMs</h1>
-              <p className="text-xs text-muted-foreground">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Council of LLMs
+              </h1>
+              <p className="text-sm text-muted-foreground">
                 Let AI models debate, deliberate, and vote on your questions
               </p>
             </div>
+            <Badge variant="outline" className="hidden sm:flex gap-1.5">
+              <Zap className="h-3 w-3" />
+              <span>AI Debate Arena</span>
+            </Badge>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-3 gap-3">
-          {/* Left column - Setup & Participants */}
-          <div className="space-y-3">
-            {/* Question input */}
-            <Card>
-              <CardHeader>
+        <div className="grid lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-3 space-y-3">
+            <Card className="lg:sticky lg:top-24">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Your Question
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   What would you like the council to debate?
                 </CardDescription>
               </CardHeader>
@@ -118,13 +148,11 @@ export function CouncilPage() {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   disabled={isDebating}
-                  className="min-h-[84px] resize-none text-sm"
+                  className="min-h-[80px] resize-none text-sm"
                 />
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <label className="text-xs font-medium mb-1.5 block">
-                      Debate Rounds
-                    </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium mb-1.5 block">Rounds</label>
                     <Select
                       value={maxRounds}
                       onValueChange={setMaxRounds}
@@ -143,21 +171,62 @@ export function CouncilPage() {
                     </Select>
                   </div>
                 </div>
+
+                <div className="space-y-2 pt-2 border-t">
+                  <label className="text-xs font-medium">Advanced Options</label>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="webSearch"
+                        checked={enableWebSearch}
+                        onCheckedChange={(checked) => setEnableWebSearch(checked as boolean)}
+                        disabled={isDebating}
+                      />
+                      <label htmlFor="webSearch" className="text-xs cursor-pointer flex items-center gap-1.5">
+                        <Search className="h-3 w-3" />
+                        Enable Web Search
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="crossExam"
+                        checked={enableCrossExamination}
+                        onCheckedChange={(checked) => setEnableCrossExamination(checked as boolean)}
+                        disabled={isDebating}
+                      />
+                      <label htmlFor="crossExam" className="text-xs cursor-pointer flex items-center gap-1.5">
+                        <HelpCircle className="h-3 w-3" />
+                        Cross-Examination
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="devilsAdvocate"
+                        checked={enableDevilsAdvocate}
+                        onCheckedChange={(checked) => setEnableDevilsAdvocate(checked as boolean)}
+                        disabled={isDebating}
+                      />
+                      <label htmlFor="devilsAdvocate" className="text-xs cursor-pointer flex items-center gap-1.5">
+                        <ArrowRightLeft className="h-3 w-3" />
+                        Devil&apos;s Advocate
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* LLM Selection */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Sparkles className="h-4 w-4" />
-                  Select Council Members
+                  Select Council
                   <Badge variant="secondary" className="ml-auto text-xs">
                     {selectedLLMs.length} selected
                   </Badge>
                 </CardTitle>
-                <CardDescription>
-                  Choose at least 2 AI models to participate in the debate
+                <CardDescription className="text-xs">
+                  Choose at least 2 AI models
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -170,7 +239,6 @@ export function CouncilPage() {
               </CardContent>
             </Card>
 
-            {/* Action buttons */}
             <div className="flex gap-2">
               <Button
                 onClick={handleStartDebate}
@@ -181,7 +249,7 @@ export function CouncilPage() {
                 {isDebating ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {status === "voting" ? "Voting..." : "Debating..."}
+                    {status === "cross-examination" ? "Examining..." : status === "voting" ? "Voting..." : "Debating..."}
                   </>
                 ) : (
                   <>
@@ -197,13 +265,11 @@ export function CouncilPage() {
                   size="default"
                   disabled={isDebating}
                 >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
+                  <RotateCcw className="h-4 w-4" />
                 </Button>
               )}
             </div>
 
-            {/* Error display */}
             {error && (
               <Card className="border-destructive bg-destructive/5">
                 <CardContent className="pt-4">
@@ -212,33 +278,30 @@ export function CouncilPage() {
                     <div>
                       <p className="text-xs font-medium text-destructive">Error</p>
                       <p className="text-xs text-destructive/80 mt-0.5">{error}</p>
-                      <p className="text-[11px] text-muted-foreground mt-2">
-                        Click Reset to try again
-                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Participant list during debate */}
             {participants.length > 0 && (
               <ParticipantList
                 participants={participants}
                 votes={votes}
                 currentSpeaker={currentSpeaker}
                 currentVoter={currentVoter}
+                devilsAdvocateId={devilsAdvocateId}
               />
             )}
+
+            <TrendingTopics onSelectTopic={handleTopicSelect} />
           </div>
 
-          {/* Center column - Debate Arena */}
-          <div className="lg:col-span-2 space-y-3">
-            {/* Status bar */}
+          <div className="lg:col-span-9 space-y-3">
             {status !== "idle" && (
               <Card className={status === "error" ? "border-destructive" : ""}>
                 <CardContent className="py-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-3">
                       <Badge
                         variant={
@@ -254,6 +317,12 @@ export function CouncilPage() {
                           <>
                             <Activity className="h-3 w-3 mr-1" />
                             Round {currentRound}
+                          </>
+                        )}
+                        {status === "cross-examination" && (
+                          <>
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Cross-Examination
                           </>
                         )}
                         {status === "voting" && (
@@ -284,28 +353,53 @@ export function CouncilPage() {
                             <span>{votes.length} votes</span>
                           </>
                         )}
+                        {crossExamQuestions.length > 0 && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span>{crossExamQuestions.length} Q&A</span>
+                          </>
+                        )}
                       </div>
                     </div>
-                    {consensus !== undefined && (
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${
-                          consensus >= 70 
-                            ? "border-green-500 text-green-600" 
-                            : consensus >= 40 
-                            ? "border-yellow-500 text-yellow-600" 
-                            : "border-orange-500 text-orange-600"
-                        }`}
-                      >
-                        Consensus: {consensus.toFixed(0)}%
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isWebSearchEnabled && (
+                        <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+                          <Search className="h-3 w-3 mr-1" />
+                          Web Search
+                        </Badge>
+                      )}
+                      {isCrossExamEnabled && (
+                        <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+                          <HelpCircle className="h-3 w-3 mr-1" />
+                          Cross-Exam
+                        </Badge>
+                      )}
+                      {enableDevilsAdvocate && participants.length > 0 && (
+                        <Badge variant="outline" className="text-xs bg-red-500/10 text-red-600 border-red-500/30">
+                          <ArrowRightLeft className="h-3 w-3 mr-1" />
+                          Devil&apos;s Advocate
+                        </Badge>
+                      )}
+                      {consensus !== undefined && (
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            consensus >= 70 
+                              ? "border-green-500 text-green-600" 
+                              : consensus >= 40 
+                              ? "border-yellow-500 text-yellow-600" 
+                              : "border-orange-500 text-orange-600"
+                          }`}
+                        >
+                          Consensus: {consensus.toFixed(0)}%
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Question display */}
             {status !== "idle" && question && (
               <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-primary/20">
                 <CardContent className="py-3">
@@ -320,8 +414,7 @@ export function CouncilPage() {
               </Card>
             )}
 
-            {/* Debate Arena */}
-            <Card className="min-h-[520px] border-t-4 border-t-primary">
+            <Card className="min-h-[500px] border-t-4 border-t-primary">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -347,20 +440,37 @@ export function CouncilPage() {
               </CardContent>
             </Card>
 
-            <Separator />
-
-            {/* Voting Panel - show during voting and after */}
-            {(votes.length > 0 || status === "voting") && (
-              <VotingPanel
-                votes={votes}
+            {(sentiments.size > 0 || isDebating) && (
+              <SentimentRadar
+                sentiments={sentiments}
                 participants={participants}
-                consensus={consensus}
-                isVoting={status === "voting"}
-                currentVoter={currentVoter}
+                currentSpeaker={currentSpeaker}
               />
             )}
 
-            {/* Conclusion - show only when concluded */}
+            {(crossExamQuestions.length > 0 || status === "cross-examination") && (
+              <>
+                <Separator />
+                <CrossExaminationPanel
+                  questions={crossExamQuestions}
+                  participants={participants}
+                  currentQuestion={currentCrossExamQuestion}
+                  streamingAnswer={streamingCrossExamAnswer}
+                  isActive={status === "cross-examination"}
+                />
+              </>
+            )}
+
+            <Separator />
+
+            <VotingPanel
+              votes={votes}
+              participants={participants}
+              consensus={consensus}
+              isVoting={status === "voting"}
+              currentVoter={currentVoter}
+            />
+
             {status === "concluded" && consensus !== undefined && (
               <>
                 <Separator />

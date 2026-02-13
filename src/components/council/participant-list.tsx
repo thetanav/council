@@ -4,13 +4,14 @@ import { LLMParticipant, Vote } from "@/types/council";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Users, ArrowRightLeft } from "lucide-react";
 
 interface ParticipantListProps {
   participants: LLMParticipant[];
   votes?: Vote[];
   currentSpeaker?: string;
   currentVoter?: string;
+  devilsAdvocateId?: string;
 }
 
 export function ParticipantList({
@@ -18,6 +19,7 @@ export function ParticipantList({
   votes,
   currentSpeaker,
   currentVoter,
+  devilsAdvocateId,
 }: ParticipantListProps) {
   if (participants.length === 0) {
     return null;
@@ -39,6 +41,7 @@ export function ParticipantList({
           {participants.map((participant) => {
             const isSpeaking = currentSpeaker === participant.id;
             const isVoting = currentVoter === participant.id;
+            const isDevilsAdvocate = devilsAdvocateId === participant.id;
             const vote = votes?.find((item) => item.participantId === participant.id);
 
             return (
@@ -49,6 +52,8 @@ export function ParticipantList({
                     ? "bg-primary/10 ring-1 ring-primary"
                     : isVoting
                     ? "bg-yellow-500/10 ring-1 ring-yellow-500"
+                    : isDevilsAdvocate
+                    ? "bg-red-500/10 ring-1 ring-red-500"
                     : "hover:bg-muted/50"
                 }`}
               >
@@ -64,10 +69,16 @@ export function ParticipantList({
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-xs truncate">
                       {participant.name}
                     </span>
+                    {isDevilsAdvocate && (
+                      <Badge variant="outline" className="text-[10px] border-red-500 text-red-600 bg-red-500/10">
+                        <ArrowRightLeft className="h-2.5 w-2.5 mr-1" />
+                        Devil&apos;s Advocate
+                      </Badge>
+                    )}
                     {vote && (
                       <Badge variant="outline" className="text-[11px]">
                         Voted

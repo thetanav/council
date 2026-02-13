@@ -26,6 +26,37 @@ export interface Vote {
   score: number;
 }
 
+export type DebatePhase = 
+  | "idle" 
+  | "debating" 
+  | "cross-examination" 
+  | "voting" 
+  | "concluded"
+  | "error";
+
+export type SentimentType = "joy" | "anger" | "confidence" | "curiosity" | "neutral";
+
+export interface SentimentData {
+  participantId: string;
+  sentiments: Record<SentimentType, number>;
+}
+
+export interface CrossExaminationQuestion {
+  id: string;
+  askerId: string;
+  targetId: string;
+  question: string;
+  answer: string;
+  round: number;
+}
+
+export interface TrendingTopic {
+  id: string;
+  topic: string;
+  category: string;
+  votes: number;
+}
+
 export interface DebateState {
   id: string;
   question: string;
@@ -34,7 +65,7 @@ export interface DebateState {
   votes: Vote[];
   currentRound: number;
   maxRounds: number;
-  status: "idle" | "debating" | "voting" | "concluded";
+  status: DebatePhase;
   finalAnswer?: string;
   consensus?: number;
 }
@@ -43,4 +74,7 @@ export interface DebateConfig {
   question: string;
   participants: string[];
   maxRounds: number;
+  enableDevilsAdvocate?: boolean;
+  enableCrossExamination?: boolean;
+  enableWebSearch?: boolean;
 }

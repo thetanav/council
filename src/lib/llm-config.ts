@@ -1,16 +1,16 @@
 import { LLMParticipant } from "@/types/council";
 
 export const AVAILABLE_LLMS: LLMParticipant[] = [
-  {
-    id: "gpt5",
-    name: "gpt5",
-    model: "gpt-5-2025-08-07",
-    provider: "openai",
-    avatar: "O",
-    color: "#4285f4",
-    personality:
-      "",
-  },
+  // {
+  //   id: "gpt5",
+  //   name: "gpt5",
+  //   model: "gpt-5-2025-08-07",
+  //   provider: "openai",
+  //   avatar: "O",
+  //   color: "#4285f4",
+  //   personality:
+  //     "",
+  // },
   {
     id: "qwen3",
     name: "qwen3",
