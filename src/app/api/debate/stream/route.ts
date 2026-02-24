@@ -41,7 +41,8 @@ async function analyzeSentiment(text: string): Promise<Record<SentimentType, num
   
   const lowerText = text.toLowerCase();
   
-  let joy = 0.1, anger = 0.1, confidence = 0.2, curiosity = 0.3, neutral = 0.3;
+  let joy = 0.1, anger = 0.1, confidence = 0.2, curiosity = 0.3;
+  const neutral = 0.3;
   
   positiveWords.forEach(w => { if (lowerText.includes(w)) joy += 0.15; });
   negativeWords.forEach(w => { if (lowerText.includes(w)) anger += 0.15; });
@@ -191,30 +192,43 @@ async function streamDebateResponse(
     devilsAdvocateNote = `\n\nIMPORTANT: You have been selected as the DEVIL'S ADVOCATE this round. Your job is to take the OPPOSITE position from what you believe. Challenge the consensus, find flaws in arguments, and argue against the most popular viewpoint. Be provocative but constructive.`;
   }
 
-  const systemPrompt = `You are ${participant.name}, participating in a council debate with other AI models (${otherParticipants}).
+  const roundType = round === 1 
+    ? "Opening Statements" 
+    : round === (Math.ceil(3))
+    ? "Closing Arguments"
+    : "Main Debate";
+
+  const systemPrompt = `You are ${participant.name}, a distinguished member of the Council of LLMs, participating in a thoughtful debate with other AI models (${otherParticipants}).
 
 ${participant.personality}
 
-RULES:
-- This is round ${round} of the debate
-- Keep responses focused and concise (2-3 paragraphs max, under 400 tokens)
-- You may agree, disagree, or build upon other participants' points
-- Support your position with reasoning
-- Be respectful but don't shy away from constructive disagreement
-- Address points made by others when relevant
-- IMPORTANT: Always provide a complete response. Never stop mid-sentence.${devilsAdvocateNote}`;
+STYLE GUIDELINES:
+- Be articulate, insightful, and engaging
+- Use specific examples, data, or real-world cases when possible
+- Acknowledge valid points from others before respectfully disagreeing
+- Challenge assumptions and think critically
+- Avoid generic statements - be specific and substantive
+- Maintain intellectual honesty - admit when points are well-made${devilsAdvocateNote}
+
+STRUCTURE YOUR RESPONSE:
+1. State your position clearly
+2. Support with reasoning or evidence  
+3. Address key counterpoints from previous speakers
+4. End with a compelling closing thought
+
+This is ${roundType} (Round ${round} of the debate).`;
 
   const userPrompt =
     round === 1
       ? `The question for debate is: "${question}"
 
-Please share your initial position and reasoning. Keep it concise.`
+Share your opening position. What do you think is the best answer and why? Be persuasive and engaging.`
       : `The question for debate is: "${question}"
 
 Previous discussion:
 ${conversationHistory}
 
-Please respond to the discussion, addressing points made by others and refining your position. Keep it concise.`;
+Building on what others have said, respond to the key points made. Where do you agree or disagree? What new insights can you add?`;
 
   const model = getModel(participant.provider, participant.model);
 
@@ -364,10 +378,16 @@ You must respond in the following JSON format ONLY (no other text):
   "score": <number 1-10 representing how convincing their argument was>
 }
 
+Evaluation Criteria:
+- Logic and reasoning quality
+- Use of evidence or examples
+- Ability to address counterarguments
+- Clarity and persuasiveness
+- Originality and insight
+
 Rules:
 - You CANNOT vote for yourself (${voter.name})
 - Score from 1-10 (10 = most convincing)
-- Consider: logic, evidence, clarity, and persuasiveness
 - Be objective and fair in your evaluation
 
 IMPORTANT: Return ONLY valid JSON. No markdown, no extra text.`;

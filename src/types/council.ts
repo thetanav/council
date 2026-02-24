@@ -1,4 +1,4 @@
-export type LLMProvider = "openai" | "anthropic" | "google" | "ollama" | "openrouter";
+export type LLMProvider = "openai" | "anthropic" | "google" | "ollama" | "openrouter" | "custom";
 
 export interface LLMParticipant {
   id: string;

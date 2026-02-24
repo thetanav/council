@@ -39,7 +39,9 @@ import {
   HelpCircle,
   ArrowRightLeft,
   Zap,
+  Split,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/council/theme-toggle";
 
 export function CouncilPage() {
   const [question, setQuestion] = useState("");
@@ -48,6 +50,7 @@ export function CouncilPage() {
   const [enableWebSearch, setEnableWebSearch] = useState(false);
   const [enableCrossExamination, setEnableCrossExamination] = useState(true);
   const [enableDevilsAdvocate, setEnableDevilsAdvocate] = useState(false);
+  const [comparisonMode, setComparisonMode] = useState(false);
 
   const {
     messages,
@@ -121,17 +124,20 @@ export function CouncilPage() {
                 Let AI models debate, deliberate, and vote on your questions
               </p>
             </div>
-            <Badge variant="outline" className="hidden sm:flex gap-1.5">
-              <Zap className="h-3 w-3" />
-              <span>AI Debate Arena</span>
-            </Badge>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Badge variant="outline" className="hidden sm:flex gap-1.5">
+                <Zap className="h-3 w-3" />
+                <span>AI Debate Arena</span>
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-3 space-y-3">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
+          <div className="lg:col-span-3 space-y-3 order-2 lg:order-1">
             <Card className="lg:sticky lg:top-24">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -209,6 +215,18 @@ export function CouncilPage() {
                       <label htmlFor="devilsAdvocate" className="text-xs cursor-pointer flex items-center gap-1.5">
                         <ArrowRightLeft className="h-3 w-3" />
                         Devil&apos;s Advocate
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="comparisonMode"
+                        checked={comparisonMode}
+                        onCheckedChange={(checked) => setComparisonMode(checked as boolean)}
+                        disabled={isDebating}
+                      />
+                      <label htmlFor="comparisonMode" className="text-xs cursor-pointer flex items-center gap-1.5">
+                        <Split className="h-3 w-3" />
+                        Comparison Mode
                       </label>
                     </div>
                   </div>
@@ -297,7 +315,7 @@ export function CouncilPage() {
             <TrendingTopics onSelectTopic={handleTopicSelect} />
           </div>
 
-          <div className="lg:col-span-9 space-y-3">
+          <div className="lg:col-span-9 space-y-3 order-1 lg:order-2">
             {status !== "idle" && (
               <Card className={status === "error" ? "border-destructive" : ""}>
                 <CardContent className="py-3">
