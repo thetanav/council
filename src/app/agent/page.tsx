@@ -21,6 +21,9 @@ import {
   Circle,
   StopCircle,
   Star,
+  SquareMousePointer,
+  NotebookPen,
+  BookOpenCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChat } from "@ai-sdk/react";
@@ -46,22 +49,22 @@ export default function AgentPage() {
     scrollToBottom();
   }, [messages]);
 
-  // useEffect(() => {
-  //   const pollScreen = async () => {
-  //     try {
-  //       const res = await fetch("/api/agent/screen");
-  //       const data = await res.json();
-  //       if (data.success && data.image) {
-  //         setCurrentFrame(data.image);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to poll screen:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const pollScreen = async () => {
+      try {
+        const res = await fetch("/api/agent/screen");
+        const data = await res.json();
+        if (data.success && data.image) {
+          setCurrentFrame(data.image);
+        }
+      } catch (error) {
+        console.error("Failed to poll screen:", error);
+      }
+    };
 
-  //   const interval = setInterval(pollScreen, 15000);
-  //   return () => clearInterval(interval);
-  // }, []);
+    const interval = setInterval(pollScreen, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleClear = () => {
     setMessages([]);
@@ -70,7 +73,7 @@ export default function AgentPage() {
   return (
     <div className="h-screen flex flex-col bg-background">
       <div className="flex-1 flex overflow-hidden">
-        <div className="w-1/2 border-r flex flex-col">
+        <div className="w-2/3 border-r flex flex-col">
           <div className="p-4 flex border-b bg-muted/30 justify-between">
             <h2 className="font-medium flex items-center gap-2">
               <Monitor className="h-4 w-4" />
@@ -106,10 +109,39 @@ export default function AgentPage() {
                         </Streamdown>
                       );
                     }
-                    if (part.type === "tool-webTool") {
+                    if (part.type === "tool-browser") {
                       return (
                         <div key={partIndex} className="text-xs opacity-40">
+                          <SquareMousePointer className="h-3 w-3 inline-block mr-1" />
                           {part.input!.commandarg}
+                        </div>
+                      );
+                    }
+                    if (part.type === "tool-bash") {
+                      return (
+                        <div
+                          key={partIndex}
+                          className="text-xs flex opacity-40">
+                          <Terminal className="h-3 w-3 inline-block mr-1" />
+                          {part.input!.command}
+                        </div>
+                      );
+                    }
+                    if (part.type === "tool-write") {
+                      return (
+                        <div key={partIndex} className="text-xs opacity-40">
+                          <NotebookPen className="h-3 w-3 inline-block mr-1" />
+                          {part.input!.path}
+                        </div>
+                      );
+                    }
+                    if (part.type === "tool-read") {
+                      return (
+                        <div
+                          key={partIndex}
+                          className="text-xs flex opacity-40">
+                          <BookOpenCheck className="h-3 w-3 inline-block mr-1" />
+                          {part.input!.path}
                         </div>
                       );
                     }
@@ -119,7 +151,7 @@ export default function AgentPage() {
 
               {status == "streaming" && (
                 <div className="flex">
-                  <Star className="fill-blue-500 stroke-blue-600 h-3 w-3 animate-bounce" />
+                  <Star className="fill-blue-500 stroke-blue-600 h-4 w-4 animate-bounce" />
                 </div>
               )}
 
@@ -157,17 +189,17 @@ export default function AgentPage() {
                 disabled={!input.trim()}
                 size={"icon-sm"}
                 className="self-end rounded-xl cursor-pointer">
-                {status == "streaming" ? (
-                  <StopCircle className="h-4 w-4" />
-                ) : (
-                  <Send className="h-4 w-4" />
+                {status == "ready" && <Send className="h-4 w-4" />}
+                {status == "streaming" && <StopCircle className="h-4 w-4" />}
+                {status == "submitted" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 )}
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="w-1/2 flex flex-col">
+        <div className="w-1/3 flex flex-col">
           <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
             <h2 className="font-medium flex items-center gap-2">
               <Monitor className="h-4 w-4" />

@@ -5,7 +5,7 @@ import fs from "fs";
 export async function GET(req: NextRequest) {
   try {
     execSync(
-      "agent-browser screenshot page.jpg --screenshot-format jpeg --screenshot-quality 20",
+      "npx agent-browser screenshot ~/c/p/council/page.jpg --screenshot-format jpeg --screenshot-quality 20",
     );
     const image = fs.readFileSync("page.jpg");
     const base64Data = image.toString("base64");
