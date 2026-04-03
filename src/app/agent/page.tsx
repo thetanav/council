@@ -24,11 +24,13 @@ import {
   SquareMousePointer,
   NotebookPen,
   BookOpenCheck,
+  RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Streamdown } from "streamdown";
+import { Switch } from "@/components/ui/switch";
 
 export default function AgentPage() {
   const [input, setInput] = useState("");
@@ -49,22 +51,17 @@ export default function AgentPage() {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    const pollScreen = async () => {
-      try {
-        const res = await fetch("/api/agent/screen");
-        const data = await res.json();
-        if (data.success && data.image) {
-          setCurrentFrame(data.image);
-        }
-      } catch (error) {
-        console.error("Failed to poll screen:", error);
+  const pollScreen = async () => {
+    try {
+      const res = await fetch("/api/agent/screen");
+      const data = await res.json();
+      if (data.success && data.image) {
+        setCurrentFrame(data.image);
       }
-    };
-
-    const interval = setInterval(pollScreen, 15000);
-    return () => clearInterval(interval);
-  }, []);
+    } catch (error) {
+      console.error("Failed to poll screen:", error);
+    }
+  };
 
   const handleClear = () => {
     setMessages([]);
@@ -199,12 +196,22 @@ export default function AgentPage() {
           </div>
         </div>
 
-        <div className="w-1/3 flex flex-col">
+        <div className="w-2/3 flex flex-col">
           <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
             <h2 className="font-medium flex items-center gap-2">
               <Monitor className="h-4 w-4" />
-              Browser View
+              Screen
             </h2>
+            <div className="flex gap-1 items-center">
+              <p>CDP Mode</p>
+              <Switch id="airplane-mode" />
+            </div>
+            <Button
+              variant={"outline"}
+              size={"icon-sm"}
+              onClick={() => pollScreen()}>
+              <RotateCw />
+            </Button>
           </div>
 
           <div className="flex-1 flex flex-col overflow-hidden">
