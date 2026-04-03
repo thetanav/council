@@ -12,7 +12,8 @@ import { execSync } from "node:child_process";
 import { createBashTool } from "bash-tool";
 
 export async function POST(req: NextRequest) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const { messages, cdp }: { messages: UIMessage[]; cdp: boolean } =
+    await req.json();
   const { tools } = await createBashTool();
 
   const result = streamText({
@@ -35,7 +36,9 @@ export async function POST(req: NextRequest) {
             ),
         }),
         execute: ({ commandarg }) => {
-          const result = execSync(`npx agent-browser ${commandarg}`);
+          const result = execSync(
+            `npx agent-browser ${cdp && "--cdp 9222"} ${commandarg}`,
+          );
 
           return {
             stdout: result,

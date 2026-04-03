@@ -31,15 +31,24 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Streamdown } from "streamdown";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function AgentPage() {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentFrame, setCurrentFrame] = useState<string | null>(null);
+  const [cdp, setCdp] = useState(false);
 
-  const { messages, sendMessage, setMessages, status } = useChat({
+  const { messages, sendMessage, setMessages, status, stop } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/agent/chat",
+      body: {
+        cdp,
+      },
     }),
   });
 
@@ -53,7 +62,10 @@ export default function AgentPage() {
 
   const pollScreen = async () => {
     try {
-      const res = await fetch("/api/agent/screen");
+      const res = await fetch("/api/agent/screen", {
+        method: "POST",
+        body: JSON.stringify({ cdp }),
+      });
       const data = await res.json();
       if (data.success && data.image) {
         setCurrentFrame(data.image);
@@ -202,10 +214,26 @@ export default function AgentPage() {
               <Monitor className="h-4 w-4" />
               Screen
             </h2>
-            <div className="flex gap-1 items-center">
-              <p>CDP Mode</p>
-              <Switch id="airplane-mode" />
-            </div>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex gap-2 items-center">
+                  <p className="text-sm text-muted-foreground">CDP Mode</p>
+                  <Switch
+                    checked={cdp}
+                    onCheckedChange={(val) => {
+                      setCdp(val);
+                      setMessages([]);
+                      stop();
+                    }}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Start with google-chrome --remote-debugging-port=9222</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Button
               variant={"outline"}
               size={"icon-sm"}
