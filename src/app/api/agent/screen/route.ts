@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
 
   try {
     execSync(
-      `npx agent-browser ${cdp && "--cdp 9222"} screenshot ~/c/p/council/page.jpg --screenshot-format jpeg --screenshot-quality 20`,
+      `npx agent-browser ${cdp ? "--cdp 9222" : ""} screenshot --annotate ~/c/p/council/page.jpg --screenshot-format jpeg --screenshot-quality 20`,
     );
     const image = fs.readFileSync("page.jpg");
     const base64Data = image.toString("base64");

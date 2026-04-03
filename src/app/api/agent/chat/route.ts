@@ -32,12 +32,15 @@ export async function POST(req: NextRequest) {
             .string()
             .optional()
             .describe(
-              "Arguments for the agent-browser command, for example: `open https://www.google.com` or `snapshot -i -c -d <depth/2>` or empty string to see available commands and there use case.",
+              "Arguments for the agent-browser command, for example: `open https://www.google.com` or `snapshot -i -c -d 3` (use snapshot only when necessary) or empty string to see available commands and there use case.",
             ),
         }),
         execute: ({ commandarg }) => {
+          if (commandarg.includes("snapshot")) {
+            commandarg += " -i -c -d 3";
+          }
           const result = execSync(
-            `npx agent-browser ${cdp && "--cdp 9222"} ${commandarg}`,
+            `npx agent-browser ${cdp ? "--cdp 9222" : ""} ${commandarg}`,
           );
 
           return {
